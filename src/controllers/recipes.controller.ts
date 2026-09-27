@@ -139,3 +139,32 @@ recipesController.delete("/:id", AuthService.authorize, (req: AuthenticatedReque
 
   return res.sendStatus(204);
 });
+
+//EXERCISE 2
+/**
+ * PATCH /recipes/:id
+ * Met à jour partiellement une recette
+ */
+
+recipesController.patch("/:id", AuthService.authorize, (req : AuthenticatedRequest, res: Response)=>{
+
+  const recipeId = Number(req.params.id);
+  
+  if(!req.user)return res.sendStatus(401);
+  const user = req.user;
+  if(!Number.isInteger(recipeId)) return res.sendStatus(400);
+  const recipe =RecipesService.getById(recipeId);
+  if(!recipe) return res.sendStatus(404);
+
+  if(recipe.authorId!== user?.id && user.role!== ERole.ADMIN ){
+    return res.sendStatus(403);
+  }
+  const updatedRecipe =RecipesService.patch(recipeId, req.body);
+
+  if(!updatedRecipe){
+    return res.sendStatus(404);
+  }
+ 
+  return res.status(200).json(updatedRecipe);
+
+})

@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "title": "Pancakes moelleux",
+    "title": "Carbonara revisitée",
     "description": "Des pancakes épais et aérés pour un brunch réussi.",
     "image_url": "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800",
     "prep_time": 10,
@@ -54,7 +54,7 @@
     ],
     "author_id": 2,
     "created_at": "2026-09-01T08:00:00.000Z",
-    "updated_at": "2026-09-01T08:00:00.000Z"
+    "updated_at": "2026-09-27T17:35:39.998Z"
   },
   {
     "id": 2,

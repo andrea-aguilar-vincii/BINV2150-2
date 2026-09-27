@@ -1,5 +1,14 @@
 @server = http://localhost:3000
 
+### Connexion (admin)
+# @name adminLogin
+POST {{server}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@miammiam.be",
+  "password": "admin"
+}
 ### Connexion (alice)
 # @name login
 POST {{server}}/auth/login
@@ -163,3 +172,22 @@ Authorization: {{login.response.body.token}}
 ### Supprimer une recette déjà supprimée -> 404
 DELETE {{server}}/recipes/{{createRecipe.response.body.id}}
 Authorization: {{login.response.body.token}}
+
+### PATCH recette
+PATCH {{server}}/recipes/1
+Content-Type: application/json
+Authorization: {{login.response.body.token}}
+
+{
+  "title": "Carbonara revisitée"
+}
+
+
+### PATCH recette  UPdate recette ALice avec compte Bob
+PATCH {{server}}/recipes/1
+Content-Type: application/json
+Authorization: {{bobLogin.response.body.token}}
+
+{
+  "title": "Carbonara revisitée"
+}

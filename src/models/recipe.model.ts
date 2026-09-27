@@ -86,6 +86,22 @@ export interface NewRecipeDTO {
   steps: string[];
 }
 
+//EX2
+export interface UpdateRecipeDTO{
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+  difficulty?: number;
+  categoryId?: number;
+  tags?: string[];
+  ingredients?: Ingredient[];
+  steps?: string[];
+
+}
+
 /** Filtres de GET /recipes (query parameters, tous optionnels) */
 export interface RecipeFilter {
   categoryId?: number;

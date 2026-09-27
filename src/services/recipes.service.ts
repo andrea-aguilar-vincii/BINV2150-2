@@ -1,5 +1,5 @@
 import { RecipesMapper } from "../mappers/recipes.mapper";
-import { NewRecipe, Recipe, RecipeDBO, RecipeFilter } from "../models/recipe.model";
+import { NewRecipe, Recipe, RecipeDBO, RecipeFilter, UpdateRecipeDTO } from "../models/recipe.model";
 import { AbstractService } from "./abstract.service";
 import { UsersService } from "./users.service";
 
@@ -138,7 +138,7 @@ export class RecipesService extends AbstractService {
    * Remplace le contenu d'une recette existante (l'id, l'auteur et la date de création sont conservés).
    * @returns la recette mise à jour, ou undefined si elle n'existe pas
    */
-  static update(id: number, updatedRecipe: NewRecipe): Recipe | undefined {
+  static update(id: number, updatedRecipe:NewRecipe): Recipe | undefined {
     const recipes = this.readRecipesDB();
     const index = recipes.findIndex((recipe) => recipe.id === id);
     if (index === -1) return undefined;
@@ -185,5 +185,34 @@ export class RecipesService extends AbstractService {
 
     UsersService.removeFavoriteForAll(id);
     return true;
+  }
+
+
+  //EXO 2 
+  /**
+   * 
+   * @param id 
+   * @param updatedRecipe 
+   * @returns recette mise à jour 
+   */
+  static patch(id: number, updatedRecipe: UpdateRecipeDTO): Recipe |undefined{
+
+    const recipes = this.readRecipesDB();
+    const index = recipes.findIndex(recipe=> recipe.id === id);
+    if(index===-1) return undefined;
+
+    const existing = recipes[index];
+
+    const recipe : Recipe ={
+      ...existing,
+      ...updatedRecipe,
+      id: existing.id,
+      authorId: existing.authorId,
+      createdAt:existing.createdAt,
+      updatedAt: new Date
+    }
+    recipes[index] = recipe;
+    this.writeRecipesDB(recipes);
+    return recipe;
   }
 }
