@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { User } from "./user.model";
+import { TokenPayload, User } from "./user.model";
 
 /**
  * Requête Express enrichie par le middleware AuthService.authorize :
@@ -7,4 +7,11 @@ import { User } from "./user.model";
  */
 export interface AuthenticatedRequest extends Request {
   user?: User;
+}
+
+//EXO 3
+
+// Request étendue avec l'utilisateur authentifié (payload du token)
+export interface AuthRequest extends Request {
+user?: TokenPayload;
 }

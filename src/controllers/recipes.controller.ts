@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { RecipesMapper } from "../mappers/recipes.mapper";
-import { AuthenticatedRequest } from "../models/auth.model";
+import { AuthenticatedRequest, AuthRequest } from "../models/auth.model";
 import { RecipeDTO, RecipeFilter } from "../models/recipe.model";
 import { ERole } from "../models/user.model";
 import { AuthService } from "../services/auth.service";
@@ -38,7 +38,8 @@ recipesController.get("/", (req: Request, res: Response) => {
   }
   if (isString(req.query.maxPrepTime)) {
     const maxPrepTime = Number(req.query.maxPrepTime);
-    if (!Number.isInteger(maxPrepTime) || maxPrepTime < 0) return res.sendStatus(400);
+    if (!Number.isInteger(maxPrepTime) || maxPrepTime < 0)
+      return res.sendStatus(400);
     filter.maxPrepTime = maxPrepTime;
   }
 
@@ -70,28 +71,47 @@ recipesController.get("/:id", (req: Request, res: Response) => {
  * POST /recipes
  * Crée une recette (utilisateur connecté = auteur)
  */
-recipesController.post("/", AuthService.authorize, (req: AuthenticatedRequest, res: Response) => {
-  LoggerService.info("[POST] /recipes");
+recipesController.post(
+  "/",
+  AuthService.authorize,
+  (req: AuthenticatedRequest, res: Response) => {
+    LoggerService.info("[POST] /recipes");
 
-  if (!req.user) return res.sendStatus(401);
-  const user = req.user;
+    if (!req.user) return res.sendStatus(401);
+    const user = req.user;
 
-  const body: unknown = req.body;
-  if (!isNewRecipeDTO(body)) return res.sendStatus(400);
+    const body: unknown = req.body;
+    if (!isNewRecipeDTO(body)) return res.sendStatus(400);
 
-  if (!CategoriesService.getById(body.categoryId)) return res.sendStatus(400); // catégorie inconnue
+    if (!CategoriesService.getById(body.categoryId)) return res.sendStatus(400); // catégorie inconnue
 
-  const newRecipe = RecipesMapper.fromNewDTO(body, user.id);
-  const recipe = RecipesService.create(newRecipe);
-  if (!recipe) return res.sendStatus(500);
+    const newRecipe = RecipesMapper.fromNewDTO(body, user.id);
+    const recipe = RecipesService.create(newRecipe);
+    if (!recipe) return res.sendStatus(500);
 
-  return res.status(201).json(RecipesMapper.toDTO(recipe));
-});
+    return res.status(201).json(RecipesMapper.toDTO(recipe));
+  },
+);
 
 /**
  * PUT /recipes/:id
  * Remplace une recette (auteur ou admin uniquement)
  */
+recipesController.put( "/:id", AuthService.authorize, (req: AuthRequest, res: Response) => {
+    const recipeId = Number(req.params.id);
+    const recipe = RecipesService.getById(recipeId);
+    if (!recipe) return res.sendStatus(404);
+    // Vérifier si l'utilisateur a le droit de modifier la recette : auteur ou admin
+    // (req.user est forcément défini ici : le middleware authorize a répondu 401 sinon)
+    if (recipe.authorId !== req.user!.id && req.user!.role !== ERole.ADMIN) {
+      return res.sendStatus(403); // Forbidden
+    }
+    RecipesService.update(recipeId, req.body);
+    res.sendStatus(204);
+  },
+);
+
+/* ANCIEN CODE PUT/recipes
 recipesController.put("/:id", AuthService.authorize, (req: AuthenticatedRequest, res: Response) => {
   LoggerService.info("[PUT] /recipes/:id");
 
@@ -116,55 +136,76 @@ recipesController.put("/:id", AuthService.authorize, (req: AuthenticatedRequest,
 
   return res.sendStatus(204);
 });
-
+*/
 /**
  * DELETE /recipes/:id
  * Supprime une recette (auteur ou admin uniquement)
- */
-recipesController.delete("/:id", AuthService.authorize, (req: AuthenticatedRequest, res: Response) => {
-  LoggerService.info("[DELETE] /recipes/:id");
+ *//*
 
-  if (!req.user) return res.sendStatus(401);
-  const user = req.user;
 
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id < 1) return res.sendStatus(400);
+ /*
 
-  const recipe = RecipesService.getById(id);
-  if (!recipe) return res.sendStatus(404);
+recipesController.delete(
+  "/:id",
+  AuthService.authorize,
+  (req: AuthenticatedRequest, res: Response) => {
+    LoggerService.info("[DELETE] /recipes/:id");
 
-  if (recipe.authorId !== user.id && user.role !== ERole.ADMIN) return res.sendStatus(403);
+    if (!req.user) return res.sendStatus(401);
+    const user = req.user;
 
-  if (!RecipesService.delete(id)) return res.sendStatus(500);
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.sendStatus(400);
 
-  return res.sendStatus(204);
+    const recipe = RecipesService.getById(id);
+    if (!recipe) return res.sendStatus(404);
+
+    if (recipe.authorId !== user.id && user.role !== ERole.ADMIN)
+      return res.sendStatus(403);
+
+    if (!RecipesService.delete(id)) return res.sendStatus(500);
+
+    return res.sendStatus(204);
+  },
+);
+*/
+
+
+recipesController.delete("/:id", AuthService.authorize, AuthService.isAdmin, (req: Request, res: Response) => {
+const recipeId = Number(req.params.id);
+if (!RecipesService.getById(recipeId)) return res.sendStatus(404);
+RecipesService.delete(recipeId);
+res.sendStatus(204);
 });
-
 //EXERCISE 2
 /**
  * PATCH /recipes/:id
  * Met à jour partiellement une recette
  */
 
-recipesController.patch("/:id", AuthService.authorize, (req : AuthenticatedRequest, res: Response)=>{
+recipesController.patch(
+  "/:id",
+  AuthService.authorize,
+  (req: AuthenticatedRequest, res: Response) => {
+    const recipeId = Number(req.params.id);
 
-  const recipeId = Number(req.params.id);
-  
-  if(!req.user)return res.sendStatus(401);
-  const user = req.user;
-  if(!Number.isInteger(recipeId)) return res.sendStatus(400);
-  const recipe =RecipesService.getById(recipeId);
-  if(!recipe) return res.sendStatus(404);
+    if (!req.user) return res.sendStatus(401);
+    const user = req.user;
+    if (!Number.isInteger(recipeId)) return res.sendStatus(400);
+    const recipe = RecipesService.getById(recipeId);
+    if (!recipe) return res.sendStatus(404);
 
-  if(recipe.authorId!== user?.id && user.role!== ERole.ADMIN ){
-    return res.sendStatus(403);
-  }
-  const updatedRecipe =RecipesService.patch(recipeId, req.body);
+    if (recipe.authorId !== user?.id && user.role !== ERole.ADMIN) {
+      return res.sendStatus(403);
+    }
+    const updatedRecipe = RecipesService.patch(recipeId, req.body);
 
-  if(!updatedRecipe){
-    return res.sendStatus(404);
-  }
- 
-  return res.status(200).json(updatedRecipe);
+    if (!updatedRecipe) {
+      return res.sendStatus(404);
+    }
 
-})
+    return res.status(200).json(updatedRecipe);
+  },
+);
+
+//EXO 3

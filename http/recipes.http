@@ -191,3 +191,20 @@ Authorization: {{bobLogin.response.body.token}}
 {
   "title": "Carbonara revisitée"
 }
+
+
+
+///EXO 3
+### Login
+# @name login
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "...",
+"password": "..."
+}
+
+### DELETE Recipe
+DELETE http://localhost:3000/recipes/5
+Authorization: {{login.response.body.token}}

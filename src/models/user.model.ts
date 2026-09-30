@@ -67,3 +67,12 @@ export interface CredentialsDTO {
 export interface TokenDTO {
   token: string;
 }
+
+//EXO 3
+// Informations identifiant l'utilisateur
+// Stockées dans le payload du token
+export interface TokenPayload{
+  id: number;
+  email: string;
+  role: "user" | "admin"; 
+}
